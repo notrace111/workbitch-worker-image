@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - Dockerfile
+      - pod-start.sh
       - verify-runtime.py
       - .dockerignore
       - .github/workflows/publish-image.yml
@@ -77,7 +78,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:runtime-v1
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:runtime-v2
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Record immutable digest
