@@ -19,8 +19,21 @@ RUN python -m pip install \
       --extra-index-url https://download.pytorch.org/whl/cu128
 
 COPY verify-runtime.py /usr/local/bin/workbitch-verify-runtime
+COPY pod-start.sh /usr/local/bin/workbitch-pod-start
 
-RUN chmod 0755 /usr/local/bin/workbitch-verify-runtime \
+RUN chmod 0755 \
+      /usr/local/bin/workbitch-verify-runtime \
+      /usr/local/bin/workbitch-pod-start \
+    && test -x /start.sh \
+    && bash -n /start.sh \
+    && bash -n /usr/local/bin/workbitch-pod-start \
     && python /usr/local/bin/workbitch-verify-runtime --build
 
+EXPOSE 22 8000
+
 WORKDIR /workspace
+
+# Preserve the official RunPod NVIDIA entrypoint inherited from the base image.
+# Enter RunPod's own /start.sh lifecycle through our headless wrapper so SSH
+# starts and the container remains long-lived.
+CMD ["/usr/local/bin/workbitch-pod-start"]
