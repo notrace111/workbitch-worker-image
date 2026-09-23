@@ -27,6 +27,41 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v6
 
+      - name: Reclaim runner disk for CUDA image
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          echo '=== DISK BEFORE CLEANUP ==='
+          df -h /
+
+          echo
+          echo '=== REMOVE UNUSED HOSTED-RUNNER TOOLCHAINS ==='
+
+          for path in \
+            /usr/local/lib/android \
+            /usr/share/dotnet \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/share/powershell \
+            /opt/hostedtoolcache/CodeQL \
+            /usr/local/share/boost
+          do
+            if [ -e "$path" ]; then
+              echo "Removing $path"
+              sudo rm -rf "$path"
+            else
+              echo "Absent: $path"
+            fi
+          done
+
+          sudo apt-get clean
+          docker system prune -af || true
+
+          echo
+          echo '=== DISK AFTER CLEANUP ==='
+          df -h /
+
       - name: Login to GHCR
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -49,6 +84,6 @@ jobs:
         run: |
           echo "## Work Bitch Worker Image" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo '\`\`\`text' >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
           echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}" >> "$GITHUB_STEP_SUMMARY"
-          echo '\`\`\`' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
