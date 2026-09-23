@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import os
+import shutil
 import sys
 from importlib.metadata import version, PackageNotFoundError
 
@@ -33,6 +35,24 @@ for package, expected in EXPECTED.items():
 
     if actual != expected:
         bad.append((package, expected, actual))
+
+print()
+print("=== RUNPOD STARTUP CONTRACT ===")
+
+checks = {
+    "/start.sh executable": os.path.isfile("/start.sh") and os.access("/start.sh", os.X_OK),
+    "sshd available": shutil.which("sshd") is not None,
+    "nginx available": shutil.which("nginx") is not None,
+    "headless wrapper executable": (
+        os.path.isfile("/usr/local/bin/workbitch-pod-start")
+        and os.access("/usr/local/bin/workbitch-pod-start", os.X_OK)
+    ),
+}
+
+for name, ok in checks.items():
+    print(f"{name:30} {'OK' if ok else 'MISSING'}")
+    if not ok:
+        bad.append((name, "present", "missing"))
 
 import torch
 
